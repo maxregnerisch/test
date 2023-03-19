@@ -20,43 +20,35 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget genisoimage
+          sudo apt-get install -y wget squashfs-tools genisoimage
 
       - name: Download FreeBSD ISO
         if: matrix.os == 'freebsd-13.0'
         run: |
-          wget https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/13.1/FreeBSD-13.1-RELEASE-amd64-bootonly.iso
+          wget https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/13.0/FreeBSD-13.0-RELEASE-amd64-bootonly.iso
           sudo mkdir -p freebsd
-          sudo mount -rw  FreeBSD-13.1-RELEASE-amd64-bootonly.iso freebsd
-
-      - name: Install FreeBSD packages
-        if: matrix.os == 'freebsd-13.0'
-        run: |
-          sudo mount --bind /dev freebsd/dev
-          sudo mount -t proc none freebsd/proc
-          sudo chroot freebsd/ /usr/sbin/freebsd-update fetch
-          sudo chroot freebsd/ /usr/sbin/freebsd-update install
-          sudo chroot freebsd/ pkg install -y bash git
+          sudo mount -o loop FreeBSD-13.0-RELEASE-amd64-bootonly.iso freebsd
+          sudo unsquashfs -d freebsd-rootfs freebsd/boot/kernel/kernel.txz
 
       - name: Download Ubuntu ISO
         if: matrix.os == 'ubuntu-22.04'
         run: |
-          wget https://releases.ubuntu.com/jammy/ubuntu-22.04.2-desktop-amd64.iso
+          wget https://releases.ubuntu.com/jammy/ubuntu-22.04.2-desktop-amd64.isoo
           sudo mkdir -p ubuntu
-          sudo mount -rw ubuntu-22.04.2-desktop-amd64.iso ubuntu
+          sudo mount -o loop ubuntu-22.04.2-desktop-amd64.iso ubuntu
+          sudo unsquashfs -d ubuntu-rootfs ubuntu/casper/filesystem.squashfs
 
-      - name: Install Ubuntu packages
-        if: matrix.os == 'ubuntu-22.04'
+      - name: Merge rootfs
         run: |
-          sudo mount --bind /dev ubuntu/dev
-          sudo mount -t proc none ubuntu/proc
-          sudo chroot ubuntu/ apt-get update
-          sudo chroot ubuntu/ apt-get install -y bash git
+          sudo rm -rf rootfs
+          sudo mkdir -p rootfs
+          sudo rsync -a freebsd-rootfs/ rootfs/
+          sudo rsync -a ubuntu-rootfs/ rootfs/
 
-      - name: Create mixed OS image
+      - name: Create mixed OS rootfs
         run: |
-          sudo mkdir -p mixedos
-          sudo rsync -a freebsd/ mixedos/
-          sudo rsync -a ubuntu/ mixedos/
-          sudo sed -i 's|/usr/bin/X11|/usr/bin|' mixedos/etc/environment
-          sudo genisoimage -o mixed-os.iso -r mixedos/
+          sudo mksquashfs rootfs/ mixed-os-rootfs.squashfs -comp gzip -no-xattrs -no-fragments
+
+      - name: Create mixed OS ISO image
+        run: |
+          sudo genisoimage -r -J -o mixed-os.iso -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table mixed-os-rootfs.squashfs
