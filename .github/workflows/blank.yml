@@ -33,13 +33,13 @@ jobs:
       - name: Extract Ubuntu rootfs
         run: |
           cd ubuntu-iso
-          7z x ubuntu-22.04.2-desktop-amd64.iso -oubuntu-rootfs
+          7z x ubuntu-22.04.2-desktop-amd64.iso ubuntu-rootfs
           cd ..
 
       - name: Extract FreeBSD rootfs
         run: |
           cd freebsd-iso
-          7z x FreeBSD-13.0-RELEASE-amd64-bootonly.iso -ofreebsd-rootfs
+          7z x FreeBSD-13.0-RELEASE-amd64-bootonly.iso freebsd-rootfs
           cd ..
 
       - name: Merge rootfs
