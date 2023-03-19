@@ -1,64 +1,65 @@
-name: Build Mixed OS
+name: Merge Ubuntu and FreeBSD Rootfs
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  build:
+  merge-rootfs:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        os: [ freebsd-13.0, ubuntu-22.04 ]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wget p7zip-full squashfs-tools genisoimage
+      - name: Install p7zip-full
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
 
-      - name: Download FreeBSD ISO
-        if: matrix.os == 'freebsd-13.0'
+      - name: Prepare directories
         run: |
-          wget https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/13.0/FreeBSD-13.0-RELEASE-amd64-bootonly.iso
-          mkdir -p freebsd
-          cp FreeBSD-13.0-RELEASE-amd64-bootonly.iso freebsd/
-          cd freebsd
-          7z x FreeBSD-13.0-RELEASE-amd64-bootonly.iso
-          rm FreeBSD-13.0-RELEASE-amd64-bootonly.iso
-          cd ..
+          mkdir ubuntu-iso freebsd-iso
+          mkdir ubuntu-rootfs freebsd-rootfs merged-rootfs new-rootfs
 
       - name: Download Ubuntu ISO
-        if: matrix.os == 'ubuntu-22.04'
         run: |
           wget https://releases.ubuntu.com/jammy/ubuntu-22.04.2-desktop-amd64.iso
-          mkdir -p ubuntu
-          cp ubuntu-22.04.2-desktop-amd64.iso ubuntu/
-          cd ubuntu
-          7z x ubuntu-22.04.2-desktop-amd64.iso
-          rm ubuntu-22.04.2-desktop-amd64.iso
+          mv ubuntu-22.04.2-desktop-amd64.iso ubuntu-iso/
+
+      - name: Download FreeBSD ISO
+        run: |
+          wget https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/13.0/FreeBSD-13.0-RELEASE-amd64-bootonly.iso
+          mv FreeBSD-13.0-RELEASE-amd64-bootonly.iso freebsd-iso/
+
+      - name: Extract Ubuntu rootfs
+        run: |
+          cd ubuntu-iso
+          7z x ubuntu-22.04.2-desktop-amd64.iso -oubuntu-rootfs
+          cd ..
+
+      - name: Extract FreeBSD rootfs
+        run: |
+          cd freebsd-iso
+          7z x FreeBSD-13.0-RELEASE-amd64-bootonly.iso -ofreebsd-rootfs
           cd ..
 
       - name: Merge rootfs
         run: |
-          sudo rm -rf rootfs
-          sudo mkdir -p rootfs
-          sudo mount -o loop,ro,offset=1048576 ubuntu/casper/filesystem.squashfs /mnt/ubuntu
-          sudo mount -o loop,ro,offset=16384 freebsd/boot/kernel/kernel /mnt/freebsd
-          sudo cp -rf /mnt/ubuntu/* rootfs/
-          sudo cp -rf /mnt/freebsd/* rootfs/
-          sudo umount /mnt/ubuntu
-          sudo umount /mnt/freebsd
+          sudo cp -r ubuntu-rootfs/* merged-rootfs/
+          sudo cp -r freebsd-rootfs/* merged-rootfs/
+          sudo tar -czvf merged-rootfs.tar.gz merged-rootfs
+          sudo chown $USER:$USER merged-rootfs.tar.gz
 
-      - name: Create mixed OS rootfs
+      - name: Create new rootfs image
         run: |
-          sudo mksquashfs rootfs/ mixed-os-rootfs.squashfs -comp gzip -no-xattrs -no-fragments
+          sudo tar -xzf merged-rootfs.tar.gz -C new-rootfs/
+          sudo rm merged-rootfs.tar.gz
+          sudo chown -R $USER:$USER new-rootfs
 
-      - name: Create mixed OS ISO image
+      - name: Create merged rootfs image
         run: |
-          sudo genisoimage -r -J -o mixed-os.iso -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table mixed-os-rootfs.squashfs
+          sudo mkisofs -o merged-rootfs.iso new-rootfs/
+          sudo chown $USER:$USER merged-rootfs.iso
+
+      - name: Cleanup
+        run: |
+          sudo rm -r ubuntu-iso freebsd-iso ubuntu-rootfs freebsd-rootfs merged-rootfs new-rootfs
