@@ -28,12 +28,6 @@ jobs:
           wget http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/13.0-RELEASE/base.txz
           sudo tar xvf base.txz -C /mnt
 
-      - name: Install BSD packages
-        if: matrix.os == 'freebsd-13.0'
-        run: |
-          sudo chroot /mnt/ /usr/sbin/freebsd-update fetch
-          sudo chroot /mnt/ /usr/sbin/freebsd-update install
-          sudo chroot /mnt/ pkg install -y bash git
 
       - name: Create mixed OS image
         run: |
