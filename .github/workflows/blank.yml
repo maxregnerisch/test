@@ -33,7 +33,7 @@ jobs:
       - name: Download Ubuntu ISO
         if: matrix.os == 'ubuntu-22.04'
         run: |
-          wget https://releases.ubuntu.com/jammy/ubuntu-22.04.2-desktop-amd64.isoo
+          wget https://releases.ubuntu.com/jammy/ubuntu-22.04.2-desktop-amd64.iso
           sudo mkdir -p ubuntu
           sudo mount -o loop ubuntu-22.04.2-desktop-amd64.iso ubuntu
           sudo unsquashfs -d ubuntu-rootfs ubuntu/casper/filesystem.squashfs
