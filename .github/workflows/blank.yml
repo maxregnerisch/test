@@ -26,6 +26,8 @@ jobs:
         if: matrix.os == 'freebsd-13.0'
         run: |
           wget http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/13.0-RELEASE/base.txz
+          rm -rf /mnt
+          sudo mkdir /mnt
           sudo tar xvf base.txz -C /mnt
 
       - name: Install BSD packages
@@ -33,7 +35,7 @@ jobs:
         run: |
           sudo mount --bind /dev /mnt/dev
           sudo mount -t proc none /mnt/proc
-          sudo mount -t sysfs none /mnt/sys
+          sudo mkdir -p /mnt/sys
           sudo chroot /mnt/ /usr/sbin/freebsd-update fetch
           sudo chroot /mnt/ /usr/sbin/freebsd-update install
           sudo chroot /mnt/ pkg install -y bash git
