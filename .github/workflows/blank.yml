@@ -32,5 +32,5 @@ jobs:
       - name: Create mixed OS image
         run: |
           sudo mkdir /mnt/ubuntu
-          sudo cp -R / /mnt/ubuntu
+          sudo cp -R /mnt /mnt/ubuntu
           sudo tar -czvf mixed-os.tar.gz /mnt/ubuntu
