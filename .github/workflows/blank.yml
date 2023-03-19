@@ -27,15 +27,14 @@ jobs:
         run: |
           wget https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/13.0/FreeBSD-13.0-RELEASE-amd64-bootonly.iso
           sudo mkdir -p freebsd
-          sudo mount -o loop FreeBSD-13.0-RELEASE-amd64-bootonly.iso freebsd
-          sudo unsquashfs -d freebsd-rootfs freebsd/boot/kernel/kernel.txz
+          sudo mount -rw loop FreeBSD-13.0-RELEASE-amd64-bootonly.iso freebsd
 
       - name: Download Ubuntu ISO
         if: matrix.os == 'ubuntu-22.04'
         run: |
           wget https://releases.ubuntu.com/jammy/ubuntu-22.04.2-desktop-amd64.iso
           sudo mkdir -p ubuntu
-          sudo mount -o loop ubuntu-22.04.2-desktop-amd64.iso ubuntu
+          sudo mount --rw ubuntu-22.04.2-desktop-amd64.iso ubuntu
           sudo unsquashfs -d ubuntu-rootfs ubuntu/casper/filesystem.squashfs
 
       - name: Merge rootfs
