@@ -26,22 +26,22 @@ jobs:
         if: matrix.os == 'freebsd-13.0'
         run: |
           wget http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/13.0-RELEASE/base.txz
-          sudo mkdir /mixedos
-          sudo tar xvf base.txz -C /mixedos
+          sudo mkdir mixedos
+          sudo tar xvf base.txz -C mixedos
 
       - name: Install BSD packages
         if: matrix.os == 'freebsd-13.0'
         run: |
-          sudo mount --bind /dev /mixedos/dev
-          sudo mount -t proc none /mixedos/proc
-          sudo mkdir -p /mixedos/sys
-          sudo chroot /mixedos/ /usr/sbin/freebsd-update fetch
-          sudo chroot /mixedos/ /usr/sbin/freebsd-update install
-          sudo chroot /mixedos/ pkg install -y bash git
+          sudo mount --bind /dev mixedos/dev
+          sudo mount -t proc none mixedos/proc
+          sudo mkdir -p mixedos/sys
+          sudo chroot mixedos/ /usr/sbin/freebsd-update fetch
+          sudo chroot mixedos/ /usr/sbin/freebsd-update install
+          sudo chroot mixedos/ pkg install -y bash git
 
       - name: Create mixed OS image
         run: |
-          sudo mkdir /mixedos/ubuntu
-          sudo cp -R / /mixedos/ubuntu
-          sudo sed -i 's|/usr/bin/X11|/usr/bin|' /mixedos/ubuntu/etc/environment
-          sudo tar -czvf mixed-os.tar.gz /mixedos/ubuntu
+          sudo mkdir mixedos/ubuntu
+          sudo cp -R / mixedos/ubuntu
+          sudo sed -i 's|/usr/bin/X11|/usr/bin|' mixedos/ubuntu/etc/environment
+          sudo tar -czvf mixed-os.tar.gz mixedos/ubuntu
