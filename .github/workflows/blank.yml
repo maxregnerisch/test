@@ -26,8 +26,6 @@ jobs:
         if: matrix.os == 'freebsd-13.0'
         run: |
           wget http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/13.0-RELEASE/base.txz
-          rm -rf /mnt
-          sudo mkdir /mnt
           sudo tar xvf base.txz -C /mnt
 
       - name: Install BSD packages
