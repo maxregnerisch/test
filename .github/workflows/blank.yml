@@ -26,11 +26,9 @@ jobs:
         if: matrix.os == 'freebsd-13.0'
         run: |
           wget http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/13.0-RELEASE/base.txz
-          sudo tar xvf base.txz -C /mnt
+          sudo tar xvf base.txz -C /mnt/ubuntu
 
 
       - name: Create mixed OS image
         run: |
-          sudo mkdir /mnt/ubuntu
-          sudo cp -R /mnt /mnt/ubuntu
           sudo tar -czvf mixed-os.tar.gz /mnt/ubuntu
