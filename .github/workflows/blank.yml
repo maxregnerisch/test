@@ -26,22 +26,30 @@ jobs:
         if: matrix.os == 'freebsd-13.0'
         run: |
           wget https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/13.0/FreeBSD-13.0-RELEASE-amd64-bootonly.iso
-          7z x FreeBSD-13.0-RELEASE-amd64-bootonly.iso -o freebsd
-          sudo unsquashfs -d freebsd-rootfs freebsd/boot/kernel/kernel.txz
+          mkdir -p freebsd
+          cp FreeBSD-13.0-RELEASE-amd64-bootonly.iso freebsd/
+          cd freebsd
+          7z x FreeBSD-13.0-RELEASE-amd64-bootonly.iso
+          rm FreeBSD-13.0-RELEASE-amd64-bootonly.iso
+          cd ..
 
       - name: Download Ubuntu ISO
         if: matrix.os == 'ubuntu-22.04'
         run: |
           wget https://releases.ubuntu.com/jammy/ubuntu-22.04.2-desktop-amd64.iso
-          7z x ubuntu-22.04.2-desktop-amd64.iso -o ubuntu
-          sudo unsquashfs -d ubuntu-rootfs ubuntu/casper/filesystem.squashfs
+          mkdir -p ubuntu
+          cp ubuntu-22.04.2-desktop-amd64.iso ubuntu/
+          cd ubuntu
+          7z x ubuntu-22.04.2-desktop-amd64.iso
+          rm ubuntu-22.04.2-desktop-amd64.iso
+          cd ..
 
       - name: Merge rootfs
         run: |
           sudo rm -rf rootfs
           sudo mkdir -p rootfs
-          sudo rsync -a freebsd-rootfs/ rootfs/
-          sudo rsync -a ubuntu-rootfs/ rootfs/
+          sudo rsync -a freebsd/boot/ rootfs/
+          sudo rsync -a ubuntu/casper/filesystem.squashfs rootfs/
 
       - name: Create mixed OS rootfs
         run: |
