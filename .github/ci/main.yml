@@ -1,0 +1,29 @@
+name: Build Mixed OS
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download BSD
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget
+          wget http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/13.0-RELEASE/base.txz
+          sudo tar xvf base.txz -C /mnt
+
+      - name: Install BSD packages
+        run: |
+          sudo chroot /mnt/ pkg update
+          sudo chroot /mnt/ pkg install -y bash git
+
+      - name: Create mixed OS image
+        run: |
+          sudo mkdir /mnt/ubuntu
+          sudo cp -R / /mnt/ubuntu
+          sudo umount /mnt
+          sudo tar -czvf mixed-os.tar.gz /mnt/ubuntu
