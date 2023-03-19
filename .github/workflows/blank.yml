@@ -31,7 +31,6 @@ jobs:
       - name: Install BSD packages
         if: matrix.os == 'freebsd-13.0'
         run: |
-          sudo mount -t proc none /mnt/proc
           sudo chroot /mnt/ /usr/sbin/freebsd-update fetch
           sudo chroot /mnt/ /usr/sbin/freebsd-update install
           sudo chroot /mnt/ pkg install -y bash git
