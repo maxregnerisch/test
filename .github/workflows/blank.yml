@@ -27,7 +27,7 @@ jobs:
         run: |
           wget https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/13.1/FreeBSD-13.1-RELEASE-amd64-bootonly.iso
           sudo mkdir -p freebsd
-          sudo mount -o loop FreeBSD-13.0-RELEASE-amd64-bootonly.iso freebsd
+          sudo mount -rw  FreeBSD-13.1-RELEASE-amd64-bootonly.iso freebsd
 
       - name: Install FreeBSD packages
         if: matrix.os == 'freebsd-13.0'
@@ -43,7 +43,7 @@ jobs:
         run: |
           wget https://releases.ubuntu.com/jammy/ubuntu-22.04.2-desktop-amd64.iso
           sudo mkdir -p ubuntu
-          sudo mount -o loop ubuntu-22.04-desktop-amd64.iso ubuntu
+          sudo mount -rw ubuntu-22.04.2-desktop-amd64.iso ubuntu
 
       - name: Install Ubuntu packages
         if: matrix.os == 'ubuntu-22.04'
