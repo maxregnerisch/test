@@ -1,29 +1,46 @@
 name: Build Mixed OS
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ freebsd-13.0, ubuntu-latest ]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Download BSD
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y wget
+
+      - name: Download BSD
+        if: matrix.os == 'freebsd-13.0'
+        run: |
           wget http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/13.0-RELEASE/base.txz
+          sudo mkdir /mnt
           sudo tar xvf base.txz -C /mnt
 
       - name: Install BSD packages
+        if: matrix.os == 'freebsd-13.0'
         run: |
-          sudo chroot /mnt/ pkg update
+          sudo mount --bind /dev /mnt/dev
+          sudo mount -t proc none /mnt/proc
+          sudo mount -t sysfs none /mnt/sys
+          sudo chroot /mnt/ /usr/sbin/freebsd-update fetch
+          sudo chroot /mnt/ /usr/sbin/freebsd-update install
           sudo chroot /mnt/ pkg install -y bash git
 
       - name: Create mixed OS image
         run: |
           sudo mkdir /mnt/ubuntu
           sudo cp -R / /mnt/ubuntu
-          sudo umount /mnt
           sudo tar -czvf mixed-os.tar.gz /mnt/ubuntu
