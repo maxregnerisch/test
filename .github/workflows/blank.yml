@@ -33,7 +33,6 @@ jobs:
         run: |
           sudo mount --bind /dev /mnt/dev
           sudo mount -t proc none /mnt/proc
-          sudo mkdir -p /mnt/sys
           sudo chroot /mnt/ /usr/sbin/freebsd-update fetch
           sudo chroot /mnt/ /usr/sbin/freebsd-update install
           sudo chroot /mnt/ pkg install -y bash git
