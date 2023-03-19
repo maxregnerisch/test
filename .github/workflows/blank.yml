@@ -48,8 +48,12 @@ jobs:
         run: |
           sudo rm -rf rootfs
           sudo mkdir -p rootfs
-          sudo rsync -a freebsd/boot/ rootfs/
-          sudo rsync -a ubuntu/casper/filesystem.squashfs rootfs/
+          sudo mount -o loop,ro,offset=1048576 ubuntu/casper/filesystem.squashfs /mnt/ubuntu
+          sudo mount -o loop,ro,offset=16384 freebsd/boot/kernel/kernel /mnt/freebsd
+          sudo cp -rf /mnt/ubuntu/* rootfs/
+          sudo cp -rf /mnt/freebsd/* rootfs/
+          sudo umount /mnt/ubuntu
+          sudo umount /mnt/freebsd
 
       - name: Create mixed OS rootfs
         run: |
