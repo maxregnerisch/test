@@ -25,6 +25,7 @@ jobs:
       - name: Download BSD
         if: matrix.os == 'freebsd-13.0'
         run: |
+          sudo mkdir /mnt/ubuntu
           wget http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/13.0-RELEASE/base.txz
           sudo tar xvf base.txz -C /mnt/ubuntu
 
