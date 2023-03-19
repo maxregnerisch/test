@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ freebsd-13.0, ubuntu-latest ]
+        os: [ freebsd-13.0, ubuntu-22.04 ]
 
     steps:
       - name: Checkout code
@@ -20,28 +20,43 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget
+          sudo apt-get install -y wget genisoimage
 
-      - name: Download BSD
+      - name: Download FreeBSD ISO
         if: matrix.os == 'freebsd-13.0'
         run: |
-          wget http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/13.0-RELEASE/base.txz
-          sudo mkdir mixedos
-          sudo tar xvf base.txz -C mixedos
+          wget http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/13.0-RELEASE/FreeBSD-13.0-RELEASE-amd64-bootonly.iso
+          sudo mkdir -p freebsd
+          sudo mount -o loop FreeBSD-13.0-RELEASE-amd64-bootonly.iso freebsd
 
-      - name: Install BSD packages
+      - name: Install FreeBSD packages
         if: matrix.os == 'freebsd-13.0'
         run: |
-          sudo mount --bind /dev mixedos/dev
-          sudo mount -t proc none mixedos/proc
-          sudo mkdir -p mixedos/sys
-          sudo chroot mixedos/ /usr/sbin/freebsd-update fetch
-          sudo chroot mixedos/ /usr/sbin/freebsd-update install
-          sudo chroot mixedos/ pkg install -y bash git
+          sudo mount --bind /dev freebsd/dev
+          sudo mount -t proc none freebsd/proc
+          sudo chroot freebsd/ /usr/sbin/freebsd-update fetch
+          sudo chroot freebsd/ /usr/sbin/freebsd-update install
+          sudo chroot freebsd/ pkg install -y bash git
+
+      - name: Download Ubuntu ISO
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          wget https://releases.ubuntu.com/22.04/ubuntu-22.04-desktop-amd64.iso
+          sudo mkdir -p ubuntu
+          sudo mount -o loop ubuntu-22.04-desktop-amd64.iso ubuntu
+
+      - name: Install Ubuntu packages
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo mount --bind /dev ubuntu/dev
+          sudo mount -t proc none ubuntu/proc
+          sudo chroot ubuntu/ apt-get update
+          sudo chroot ubuntu/ apt-get install -y bash git
 
       - name: Create mixed OS image
         run: |
-          sudo mkdir mixedos/ubuntu
-          sudo cp -R / mixedos/ubuntu
-          sudo sed -i 's|/usr/bin/X11|/usr/bin|' mixedos/ubuntu/etc/environment
-          sudo tar -czvf mixed-os.tar.gz mixedos/ubuntu
+          sudo mkdir -p mixedos
+          sudo rsync -a freebsd/ mixedos/
+          sudo rsync -a ubuntu/ mixedos/
+          sudo sed -i 's|/usr/bin/X11|/usr/bin|' mixedos/etc/environment
+          sudo genisoimage -o mixed-os.iso -r mixedos/
